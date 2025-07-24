@@ -1,0 +1,38 @@
+name: Deploy Azure Function App
+
+on:
+   push:
+     branches: 
+        - main 
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 
+        uses: actions/setup-node@v4 
+        with:
+          node-version: '20'
+
+      - name: Install dependancies
+        run: npm ci
+        working-directory: ./function-app
+
+      - name: Zip the fucntion app 
+        run: zip -r function.zip .
+        working-directory: ./function-app 
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Deploy to Azure Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: crc-func-dev
+          package: ./function-app/function.zip
